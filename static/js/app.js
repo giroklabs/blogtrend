@@ -443,34 +443,57 @@ function createTrendsChart(data, labels) {
             }),
             datasets: datasets
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: '키워드 트렌드 분석'
-                },
-                legend: {
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: '관심도 점수 (0-100)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value + '점';
-                        }
-                    }
-                }
-            }
-        }
+                         options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     plugins: {
+                         title: {
+                             display: true,
+                             text: '키워드 트렌드 분석',
+                             font: {
+                                 size: window.innerWidth < 768 ? 14 : 16
+                             }
+                         },
+                         legend: {
+                             position: 'top',
+                             labels: {
+                                 font: {
+                                     size: window.innerWidth < 768 ? 10 : 12
+                                 }
+                             }
+                         }
+                     },
+                     scales: {
+                         x: {
+                             ticks: {
+                                 font: {
+                                     size: window.innerWidth < 768 ? 10 : 12
+                                 },
+                                 maxRotation: 45,
+                                 minRotation: 0
+                             }
+                         },
+                         y: {
+                             beginAtZero: true,
+                             max: 100,
+                             title: {
+                                 display: true,
+                                 text: '관심도 점수 (0-100)',
+                                 font: {
+                                     size: window.innerWidth < 768 ? 12 : 14
+                                 }
+                             },
+                             ticks: {
+                                 font: {
+                                     size: window.innerWidth < 768 ? 10 : 12
+                                 },
+                                 callback: function(value) {
+                                     return value + '점';
+                                 }
+                             }
+                         }
+                     }
+                 }
     });
 }
 

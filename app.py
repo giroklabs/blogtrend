@@ -294,6 +294,14 @@ def index():
     """메인 페이지"""
     return render_template('index.html')
 
+@app.route('/robots.txt')
+def robots():
+    return app.send_static_file('robots.txt')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    return app.send_static_file('sitemap.xml')
+
 
 
 @app.route('/api/trends')

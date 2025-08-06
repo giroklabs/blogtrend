@@ -302,6 +302,10 @@ def robots():
 def sitemap():
     return app.send_static_file('sitemap.xml')
 
+@app.route('/verification.html')
+def verification():
+    return app.send_static_file('verification.html')
+
 
 
 @app.route('/api/trends')

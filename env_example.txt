@@ -1,0 +1,8 @@
+# GitHub API 토큰 (선택사항)
+# GitHub API를 더 높은 요청 한도로 사용하려면 개인 액세스 토큰을 설정하세요
+# https://github.com/settings/tokens 에서 생성할 수 있습니다
+GITHUB_TOKEN=your_github_token_here
+
+# Flask 설정
+FLASK_ENV=development
+FLASK_DEBUG=True 

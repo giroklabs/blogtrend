@@ -247,9 +247,9 @@ body {
 /* 트렌드 아이템 스타일 */
 .trend-item {
     background: rgba(255, 255, 255, 0.8);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
     border: 1px solid rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
@@ -260,6 +260,16 @@ body {
     background: rgba(255, 255, 255, 0.95);
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.trend-item h6 {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.trend-item .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
 }
 
 /* 버튼 그룹 스타일 */

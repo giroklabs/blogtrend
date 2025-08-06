@@ -22,6 +22,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') analyzeTrends();
     });
     
+    // 블로그 글쓰기 도우미 이벤트
+    document.getElementById('generateBlog').addEventListener('click', function() {
+        generateBlogContent();
+    });
+    
+    document.getElementById('regenerateBlog').addEventListener('click', function() {
+        generateBlogContent();
+    });
+    
+    document.getElementById('copyBlog').addEventListener('click', function() {
+        copyBlogContent();
+    });
+    
+    // 블로그 키워드 엔터 키 이벤트
+    document.getElementById('blogKeyword').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') generateBlogContent();
+    });
+    
     // 초기 오늘 베스트 트렌드 로드
     loadTrendsByPeriod('today');
 });
@@ -506,6 +524,60 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+
+// 블로그 글쓰기 도우미
+async function generateBlogContent() {
+    const keyword = document.getElementById('blogKeyword').value.trim();
+    
+    if (!keyword) {
+        showAlert('블로그 주제 키워드를 입력해주세요.', 'warning');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await fetch('/api/generate-blog', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keyword: keyword })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('blogTitle').textContent = data.title;
+            document.getElementById('blogBody').innerHTML = data.content;
+            document.getElementById('blogContent').style.display = 'block';
+            
+            // 생성된 내용으로 스크롤
+            document.getElementById('blogContent').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        } else {
+            showAlert(data.error || '블로그 내용 생성에 실패했습니다.', 'danger');
+        }
+    } catch (error) {
+        console.error('블로그 생성 오류:', error);
+        showAlert('블로그 내용 생성에 실패했습니다.', 'danger');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 블로그 내용 복사
+function copyBlogContent() {
+    const title = document.getElementById('blogTitle').textContent;
+    const content = document.getElementById('blogBody').innerText;
+    const fullContent = `${title}\n\n${content}`;
+    
+    navigator.clipboard.writeText(fullContent).then(() => {
+        showAlert('블로그 내용이 클립보드에 복사되었습니다!', 'success');
+    }).catch(() => {
+        showAlert('복사에 실패했습니다. 수동으로 복사해주세요.', 'warning');
+    });
+}
 
 // 페이지 로드 시 애니메이션
 window.addEventListener('load', function() {

@@ -424,6 +424,77 @@ def analyze_custom_blogs():
             'error': str(e)
         }), 500
 
+@app.route('/api/generate-blog', methods=['POST'])
+def generate_blog_content():
+    """AI 블로그 글쓰기 도우미"""
+    try:
+        data = request.get_json()
+        keyword = data.get('keyword', '')
+        
+        if not keyword:
+            return jsonify({
+                'success': False,
+                'error': '키워드를 입력해주세요.'
+            }), 400
+        
+        # 간단한 AI 텍스트 생성 (무료 방식)
+        import random
+        
+        # 키워드별 제목 템플릿
+        title_templates = [
+            f"{keyword} 완전 가이드: 초보자도 쉽게 배우는 방법",
+            f"{keyword} 마스터하기: 실전 활용 팁 10가지",
+            f"2025년 {keyword} 트렌드와 핵심 기술",
+            f"{keyword} 입문자를 위한 기초부터 심화까지",
+            f"{keyword} 실무 활용: 실제 프로젝트로 배우기"
+        ]
+        
+        # 키워드별 내용 템플릿
+        content_templates = [
+            f"""
+<h3>🎯 {keyword}란 무엇인가?</h3>
+<p>{keyword}는 현대 개발에서 필수적인 기술입니다. 이 글에서는 {keyword}의 기본 개념부터 실무 활용까지 단계별로 알아보겠습니다.</p>
+
+<h3>📚 기본 개념 이해하기</h3>
+<p>{keyword}를 처음 접하는 분들을 위해 핵심 개념을 쉽게 설명드리겠습니다. 복잡한 이론보다는 실제 사용 사례를 중심으로 설명하겠습니다.</p>
+
+<h3>💡 실무 활용 팁</h3>
+<p>이론만으로는 부족합니다. 실제 프로젝트에서 {keyword}를 어떻게 활용하는지 구체적인 예시와 함께 알아보겠습니다.</p>
+
+<h3>🚀 다음 단계</h3>
+<p>{keyword}에 대한 기본기를 다졌다면, 이제 더 심화된 내용을 학습해보세요. 지속적인 학습과 실습이 성공의 열쇠입니다.</p>
+            """,
+            f"""
+<h3>🔥 {keyword} 핵심 포인트</h3>
+<p>오늘은 {keyword}에 대해 자세히 알아보겠습니다. 이 기술의 중요성과 활용 방법을 중심으로 설명드리겠습니다.</p>
+
+<h3>📖 기초부터 차근차근</h3>
+<p>{keyword}의 기본 원리를 이해하면 더 높은 수준의 기술도 쉽게 습득할 수 있습니다. 체계적인 학습 방법을 제시해드리겠습니다.</p>
+
+<h3>🎨 실전 예제</h3>
+<p>이론과 실습을 병행하는 것이 가장 효과적입니다. {keyword}를 활용한 실제 예제를 통해 실무 능력을 키워보세요.</p>
+
+<h3>💪 마무리</h3>
+<p>{keyword} 학습은 끝이 없습니다. 꾸준한 연습과 새로운 정보 습득을 통해 전문가로 성장하세요.</p>
+            """
+        ]
+        
+        # 랜덤하게 제목과 내용 선택
+        title = random.choice(title_templates)
+        content = random.choice(content_templates)
+        
+        return jsonify({
+            'success': True,
+            'title': title,
+            'content': content
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/ranking')
 def get_blog_ranking():
     """블로그 플랫폼 순위 데이터"""

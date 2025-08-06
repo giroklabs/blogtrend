@@ -310,6 +310,35 @@ body {
     background: rgba(0, 0, 0, 0.3);
 }
 
+/* 블로그 글쓰기 도우미 스타일 */
+.blog-content h3 {
+    color: #007AFF;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.blog-content p {
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.blog-content {
+    font-size: 0.95rem;
+}
+
+#blogContent .card {
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+#blogTitle {
+    color: #007AFF;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
 /* Google AdSense 광고 컨테이너 스타일 */
 .ad-container {
     background: rgba(255, 255, 255, 0.8);

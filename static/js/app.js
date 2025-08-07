@@ -4,8 +4,12 @@ let currentRankingData = [];
 
 // DOM이 로드되면 실행
 document.addEventListener('DOMContentLoaded', function() {
-    // 초기 데이터 로드
-    loadRankingData();
+    console.log('DOM 로드 완료, 초기 데이터 로드 시작...');
+    
+    // 초기 데이터 로드 (약간의 지연 후 실행)
+    setTimeout(() => {
+        loadRankingData();
+    }, 100);
     
     // 이벤트 리스너 등록
     document.getElementById('analyzeTrends').addEventListener('click', analyzeTrends);
@@ -22,8 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') analyzeTrends();
     });
     
-
-    
     // 초기 오늘 베스트 트렌드 로드
     loadTrendsByPeriod('today');
 });
@@ -38,32 +40,67 @@ function hideLoading() {
 }
 
 // 순위 데이터 로드
-async function loadRankingData() {
+async function loadRankingData(retryCount = 0) {
     try {
         showLoading();
+        console.log(`순위 데이터 로드 시작... (시도 ${retryCount + 1})`);
+        
         const response = await fetch('/api/ranking');
         const data = await response.json();
+        
+        console.log('순위 데이터 응답:', data);
         
         if (data.success) {
             currentRankingData = data.ranking;
             displayRankingTable(data.ranking);
+            console.log('순위 데이터 표시 완료');
         } else {
+            console.error('순위 데이터 로드 실패:', data.error);
+            if (retryCount < 3) {
+                console.log(`${retryCount + 1}초 후 재시도...`);
+                setTimeout(() => {
+                    loadRankingData(retryCount + 1);
+                }, (retryCount + 1) * 1000);
+                return;
+            }
             showAlert('순위 데이터를 불러오는데 실패했습니다.', 'danger');
         }
     } catch (error) {
         console.error('순위 데이터 로드 오류:', error);
+        if (retryCount < 3) {
+            console.log(`${retryCount + 1}초 후 재시도...`);
+            setTimeout(() => {
+                loadRankingData(retryCount + 1);
+            }, (retryCount + 1) * 1000);
+            return;
+        }
         showAlert('순위 데이터를 불러오는데 실패했습니다.', 'danger');
     } finally {
-        hideLoading();
+        if (retryCount === 0) {
+            hideLoading();
+        }
     }
 }
 
 // 순위 테이블 표시
 function displayRankingTable(rankingData) {
+    console.log('순위 테이블 표시 시작:', rankingData);
+    
     const tbody = document.getElementById('rankingTableBody');
+    if (!tbody) {
+        console.error('rankingTableBody 요소를 찾을 수 없습니다.');
+        return;
+    }
+    
     tbody.innerHTML = '';
     
-    rankingData.forEach(item => {
+    if (!rankingData || rankingData.length === 0) {
+        console.warn('순위 데이터가 비어있습니다.');
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">데이터를 불러오는 중입니다...</td></tr>';
+        return;
+    }
+    
+    rankingData.forEach((item, index) => {
         const row = document.createElement('tr');
         row.className = 'fade-in-up';
         
@@ -100,6 +137,8 @@ function displayRankingTable(rankingData) {
         
         tbody.appendChild(row);
     });
+    
+    console.log('순위 테이블 표시 완료');
 }
 
 // 점수에 따른 CSS 클래스 반환

@@ -437,6 +437,7 @@ def analyze_custom_blogs():
 def get_blog_ranking():
     """블로그 플랫폼 순위 데이터"""
     try:
+        print("=== 순위 데이터 API 호출 ===")
         # 인기 블로그 플랫폼들의 가상 순위 데이터
         ranking_data = [
             {
@@ -502,11 +503,15 @@ def get_blog_ranking():
         for i, item in enumerate(ranking_data, 1):
             item['rank'] = i
         
-        return jsonify({
+        print(f"순위 데이터 생성 완료: {len(ranking_data)}개 항목")
+        result = {
             'success': True,
             'ranking': ranking_data
-        })
+        }
+        print(f"응답 데이터: {result}")
+        return jsonify(result)
     except Exception as e:
+        print(f"순위 데이터 API 오류: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

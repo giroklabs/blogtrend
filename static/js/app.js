@@ -22,22 +22,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') analyzeTrends();
     });
     
-    // 블로그 글쓰기 도우미 이벤트
-    document.getElementById('generateBlog').addEventListener('click', function() {
-        generateBlogContent();
+    // 키워드 상세 정보 이벤트
+    document.getElementById('copyKeyword').addEventListener('click', function() {
+        copyKeywordContent();
     });
     
-    document.getElementById('regenerateBlog').addEventListener('click', function() {
-        generateBlogContent();
-    });
-    
-    document.getElementById('copyBlog').addEventListener('click', function() {
-        copyBlogContent();
-    });
-    
-    // 블로그 키워드 엔터 키 이벤트
-    document.getElementById('blogKeyword').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') generateBlogContent();
+    document.getElementById('closeKeyword').addEventListener('click', function() {
+        closeKeywordDetail();
     });
     
     // 초기 오늘 베스트 트렌드 로드
@@ -225,10 +216,11 @@ function displayBestTrends(data, period) {
         data.trends.trending_searches.slice(0, 20).forEach((item, index) => {
             html += `
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="trend-item">
+                    <div class="trend-item" style="cursor: pointer;" onclick="showKeywordDetail('${item}')">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="badge bg-success me-2">${index + 1}</span>
                             <h6 class="mb-0">${item}</h6>
+                            <i class="fas fa-info-circle text-info"></i>
                         </div>
                     </div>
                 </div>
@@ -548,15 +540,8 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// 블로그 글쓰기 도우미
-async function generateBlogContent() {
-    const keyword = document.getElementById('blogKeyword').value.trim();
-    
-    if (!keyword) {
-        showAlert('블로그 주제 키워드를 입력해주세요.', 'warning');
-        return;
-    }
-    
+// 키워드 상세 정보 표시
+async function showKeywordDetail(keyword) {
     try {
         showLoading();
         const response = await fetch('/api/generate-blog', {
@@ -570,36 +555,41 @@ async function generateBlogContent() {
         const data = await response.json();
         
         if (data.success) {
-            document.getElementById('blogTitle').textContent = data.title;
-            document.getElementById('blogBody').innerHTML = data.content;
-            document.getElementById('blogContent').style.display = 'block';
+            document.getElementById('keywordTitle').textContent = data.title;
+            document.getElementById('keywordContent').innerHTML = data.content;
+            document.getElementById('keywordDetail').style.display = 'block';
             
-            // 생성된 내용으로 스크롤
-            document.getElementById('blogContent').scrollIntoView({ 
+            // 키워드 상세 정보로 스크롤
+            document.getElementById('keywordDetail').scrollIntoView({ 
                 behavior: 'smooth' 
             });
         } else {
-            showAlert(data.error || '블로그 내용 생성에 실패했습니다.', 'danger');
+            showAlert(data.error || '키워드 정보 수집에 실패했습니다.', 'danger');
         }
     } catch (error) {
-        console.error('블로그 생성 오류:', error);
-        showAlert('블로그 내용 생성에 실패했습니다.', 'danger');
+        console.error('키워드 정보 수집 오류:', error);
+        showAlert('키워드 정보 수집에 실패했습니다.', 'danger');
     } finally {
         hideLoading();
     }
 }
 
-// 블로그 내용 복사
-function copyBlogContent() {
-    const title = document.getElementById('blogTitle').textContent;
-    const content = document.getElementById('blogBody').innerText;
+// 키워드 내용 복사
+function copyKeywordContent() {
+    const title = document.getElementById('keywordTitle').textContent;
+    const content = document.getElementById('keywordContent').innerText;
     const fullContent = `${title}\n\n${content}`;
     
     navigator.clipboard.writeText(fullContent).then(() => {
-        showAlert('블로그 내용이 클립보드에 복사되었습니다!', 'success');
+        showAlert('키워드 정보가 클립보드에 복사되었습니다!', 'success');
     }).catch(() => {
         showAlert('복사에 실패했습니다. 수동으로 복사해주세요.', 'warning');
     });
+}
+
+// 키워드 상세 정보 닫기
+function closeKeywordDetail() {
+    document.getElementById('keywordDetail').style.display = 'none';
 }
 
 // 페이지 로드 시 애니메이션

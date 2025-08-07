@@ -195,51 +195,37 @@
                                          </div>
                                      </div>
                                      
-                                     <!-- 블로그 글쓰기 도우미 -->
+                                     <!-- 키워드 상세 정보 -->
                                      <div class="row mt-4">
                                          <div class="col-12">
-                                             <div class="card border-success">
-                                                 <div class="card-header bg-success text-white">
+                                             <div class="card border-info">
+                                                 <div class="card-header bg-info text-white">
                                                      <h5 class="mb-0">
-                                                         <i class="fas fa-search me-2"></i>
-                                                         블로그 정보 수집기
+                                                         <i class="fas fa-info-circle me-2"></i>
+                                                         키워드 상세 정보
                                                      </h5>
                                                  </div>
                                                  <div class="card-body">
                                                      <p class="text-muted mb-3">
-                                                         <i class="fas fa-info-circle me-1"></i>
-                                                         키워드를 입력하면 웹 검색과 크롤링을 통해 실제 정보를 수집하여 블로그 내용을 생성해드립니다.
+                                                         <i class="fas fa-lightbulb me-1"></i>
+                                                         베스트 검색어를 클릭하면 해당 키워드에 대한 상세 정보를 웹 크롤링을 통해 제공합니다.
                                                      </p>
-                                                     <div class="input-group mb-3">
-                                                         <input type="text" class="form-control" id="blogKeyword" 
-                                                                placeholder="블로그 주제 키워드를 입력하세요 (예: 파이썬, 웹개발, AI)">
-                                                         <button class="btn btn-success" type="button" id="generateBlog">
-                                                             <i class="fas fa-search me-2"></i>정보 수집
-                                                         </button>
-                                                     </div>
-                                                     <div id="blogContent" class="mt-3" style="display: none;">
+                                                     <div id="keywordDetail" class="mt-3" style="display: none;">
                                                          <div class="card">
                                                              <div class="card-header">
-                                                                 <h6 class="mb-0"><i class="fas fa-heading me-2"></i>생성된 블로그 제목</h6>
+                                                                 <h6 class="mb-0"><i class="fas fa-search me-2"></i>키워드 정보</h6>
                                                              </div>
                                                              <div class="card-body">
-                                                                 <h5 id="blogTitle" class="text-primary"></h5>
-                                                             </div>
-                                                         </div>
-                                                         <div class="card mt-3">
-                                                             <div class="card-header">
-                                                                 <h6 class="mb-0"><i class="fas fa-file-alt me-2"></i>생성된 블로그 내용</h6>
-                                                             </div>
-                                                             <div class="card-body">
-                                                                 <div id="blogBody" class="blog-content"></div>
+                                                                 <h5 id="keywordTitle" class="text-info"></h5>
+                                                                 <div id="keywordContent" class="mt-3"></div>
                                                              </div>
                                                          </div>
                                                          <div class="mt-3">
-                                                             <button class="btn btn-outline-primary btn-sm" id="copyBlog">
+                                                             <button class="btn btn-outline-info btn-sm" id="copyKeyword">
                                                                  <i class="fas fa-copy me-1"></i>복사
                                                              </button>
-                                                             <button class="btn btn-outline-success btn-sm" id="regenerateBlog">
-                                                                 <i class="fas fa-redo me-1"></i>다시 생성
+                                                             <button class="btn btn-outline-secondary btn-sm" id="closeKeyword">
+                                                                 <i class="fas fa-times me-1"></i>닫기
                                                              </button>
                                                          </div>
                                                      </div>

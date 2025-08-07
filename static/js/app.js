@@ -22,14 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') analyzeTrends();
     });
     
-    // 키워드 상세 정보 이벤트
-    document.getElementById('copyKeyword').addEventListener('click', function() {
-        copyKeywordContent();
-    });
-    
-    document.getElementById('closeKeyword').addEventListener('click', function() {
-        closeKeywordDetail();
-    });
+
     
     // 초기 오늘 베스트 트렌드 로드
     loadTrendsByPeriod('today');
@@ -216,11 +209,10 @@ function displayBestTrends(data, period) {
         data.trends.trending_searches.slice(0, 20).forEach((item, index) => {
             html += `
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="trend-item" style="cursor: pointer;" onclick="showKeywordDetail('${item}')">
+                    <div class="trend-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="badge bg-success me-2">${index + 1}</span>
                             <h6 class="mb-0">${item}</h6>
-                            <i class="fas fa-info-circle text-info"></i>
                         </div>
                     </div>
                 </div>
@@ -540,65 +532,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// 키워드 상세 정보 표시 (최적화)
-async function showKeywordDetail(keyword) {
-    try {
-        showLoading();
-        
-        // 이미 로딩 중인지 확인
-        if (window.loadingKeyword === keyword) {
-            return;
-        }
-        window.loadingKeyword = keyword;
-        
-        const response = await fetch('/api/generate-blog', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ keyword: keyword })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            document.getElementById('keywordTitle').textContent = data.title;
-            document.getElementById('keywordContent').innerHTML = data.content;
-            document.getElementById('keywordDetail').style.display = 'block';
-            
-            // 키워드 상세 정보로 스크롤
-            document.getElementById('keywordDetail').scrollIntoView({ 
-                behavior: 'smooth' 
-            });
-        } else {
-            showAlert(data.error || '키워드 정보 수집에 실패했습니다.', 'danger');
-        }
-    } catch (error) {
-        console.error('키워드 정보 수집 오류:', error);
-        showAlert('키워드 정보 수집에 실패했습니다.', 'danger');
-    } finally {
-        hideLoading();
-        window.loadingKeyword = null;
-    }
-}
 
-// 키워드 내용 복사
-function copyKeywordContent() {
-    const title = document.getElementById('keywordTitle').textContent;
-    const content = document.getElementById('keywordContent').innerText;
-    const fullContent = `${title}\n\n${content}`;
-    
-    navigator.clipboard.writeText(fullContent).then(() => {
-        showAlert('키워드 정보가 클립보드에 복사되었습니다!', 'success');
-    }).catch(() => {
-        showAlert('복사에 실패했습니다. 수동으로 복사해주세요.', 'warning');
-    });
-}
-
-// 키워드 상세 정보 닫기
-function closeKeywordDetail() {
-    document.getElementById('keywordDetail').style.display = 'none';
-}
 
 // 페이지 로드 시 애니메이션
 window.addEventListener('load', function() {

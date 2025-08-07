@@ -7,8 +7,7 @@ from pytrends.request import TrendReq
 import pandas as pd
 from dotenv import load_dotenv
 import time
-from functools import lru_cache
-import hashlib
+
 
 load_dotenv()
 
@@ -291,9 +290,7 @@ class BlogAnalyzer:
 # 분석기 인스턴스 생성
 analyzer = BlogAnalyzer()
 
-# 캐시 설정
-CACHE_TIMEOUT = 300  # 5분 캐시
-keyword_cache = {}
+
 
 @app.route('/')
 def index():
@@ -434,185 +431,7 @@ def analyze_custom_blogs():
             'error': str(e)
         }), 500
 
-def get_cached_keyword_info(keyword):
-    """키워드 정보 캐싱"""
-    cache_key = hashlib.md5(keyword.encode()).hexdigest()
-    current_time = time.time()
-    
-    if cache_key in keyword_cache:
-        cached_data, timestamp = keyword_cache[cache_key]
-        if current_time - timestamp < CACHE_TIMEOUT:
-            return cached_data
-    
-    return None
 
-def set_cached_keyword_info(keyword, data):
-    """키워드 정보 캐시 저장"""
-    cache_key = hashlib.md5(keyword.encode()).hexdigest()
-    keyword_cache[cache_key] = (data, time.time())
-
-@app.route('/api/generate-blog', methods=['POST'])
-def generate_blog_content():
-    """웹 크롤링 기반 블로그 정보 수집기 (캐싱 적용)"""
-    try:
-        data = request.get_json()
-        keyword = data.get('keyword', '')
-        
-        if not keyword:
-            return jsonify({
-                'success': False,
-                'error': '키워드를 입력해주세요.'
-            }), 400
-        
-        # 캐시 확인
-        cached_result = get_cached_keyword_info(keyword)
-        if cached_result:
-            return jsonify(cached_result)
-        
-        # 웹 크롤링을 통한 정보 수집
-        try:
-            import requests
-            from bs4 import BeautifulSoup
-            import re
-            
-            # 검색 결과 수집
-            search_results = []
-            
-            # Google 검색 결과 크롤링 (실제로는 검색 API 사용 권장)
-            search_url = f"https://www.google.com/search?q={keyword}+블로그+가이드"
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            
-            try:
-                response = requests.get(search_url, headers=headers, timeout=10)
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # 검색 결과 추출
-                search_divs = soup.find_all('div', class_='g')
-                for div in search_divs[:5]:  # 상위 5개 결과
-                    title_elem = div.find('h3')
-                    snippet_elem = div.find('div', class_='VwiC3b')
-                    
-                    if title_elem and snippet_elem:
-                        search_results.append({
-                            'title': title_elem.get_text(),
-                            'snippet': snippet_elem.get_text()[:200] + '...'
-                        })
-            except Exception as e:
-                print(f"검색 크롤링 오류: {e}")
-            
-            # 키워드별 기본 정보 생성
-            keyword_info = {
-                '파이썬': {
-                    'description': 'Python은 간단하고 강력한 프로그래밍 언어입니다. 웹 개발, 데이터 분석, AI, 자동화 등 다양한 분야에서 사용됩니다.',
-                    'features': ['간단한 문법', '풍부한 라이브러리', '크로스 플랫폼', '오픈소스'],
-                    'learning_path': ['기본 문법', '함수와 클래스', '파일 처리', '웹 프레임워크', '데이터 분석']
-                },
-                '리액트': {
-                    'description': 'React는 Facebook에서 개발한 JavaScript 라이브러리로, 사용자 인터페이스를 구축하기 위한 선언적이고 효율적인 방법을 제공합니다.',
-                    'features': ['컴포넌트 기반', '가상 DOM', '단방향 데이터 흐름', 'JSX'],
-                    'learning_path': ['JavaScript 기초', 'JSX 문법', '컴포넌트', 'State 관리', 'Hooks']
-                },
-                '자바스크립트': {
-                    'description': 'JavaScript는 웹 브라우저에서 실행되는 프로그래밍 언어로, 동적인 웹 페이지를 만들 수 있게 해줍니다.',
-                    'features': ['프로토타입 기반', '동적 타입', '이벤트 기반', '비동기 처리'],
-                    'learning_path': ['기본 문법', 'DOM 조작', '이벤트 처리', 'AJAX', 'ES6+']
-                },
-                '웹개발': {
-                    'description': '웹 개발은 웹사이트나 웹 애플리케이션을 구축하는 과정으로, 프론트엔드와 백엔드 개발을 포함합니다.',
-                    'features': ['HTML/CSS/JavaScript', '반응형 디자인', '웹 표준', '성능 최적화'],
-                    'learning_path': ['HTML 기초', 'CSS 스타일링', 'JavaScript', '프레임워크', '백엔드']
-                },
-                'AI': {
-                    'description': '인공지능(AI)은 인간의 학습능력과 추론능력, 지각능력, 자연언어의 이해능력 등을 컴퓨터 프로그램으로 실현한 기술입니다.',
-                    'features': ['머신러닝', '딥러닝', '자연어처리', '컴퓨터 비전'],
-                    'learning_path': ['수학 기초', 'Python', '머신러닝', '딥러닝', '실전 프로젝트']
-                }
-            }
-            
-            # 키워드 정보 가져오기
-            info = keyword_info.get(keyword.lower(), {
-                'description': f'{keyword}에 대한 정보를 수집했습니다.',
-                'features': ['기본 개념', '핵심 기능', '활용 분야', '학습 방법'],
-                'learning_path': ['기초 학습', '실습', '심화 과정', '실무 적용']
-            })
-            
-            # 제목 생성
-            title = f"{keyword} 완전 가이드: 실무에서 활용하는 방법"
-            
-            # 내용 생성
-            content = f"""
-<h3>🎯 {keyword}란 무엇인가?</h3>
-<p>{info['description']}</p>
-
-<h3>📚 주요 특징</h3>
-<ul>
-{''.join([f'<li>{feature}</li>' for feature in info['features']])}
-</ul>
-
-<h3>🚀 학습 로드맵</h3>
-<ol>
-{''.join([f'<li>{step}</li>' for step in info['learning_path']])}
-</ol>
-
-<h3>💡 실무 활용 팁</h3>
-<p>{keyword}를 효과적으로 학습하려면 실제 프로젝트에 적용해보는 것이 중요합니다. 온라인 튜토리얼과 실습을 병행하여 실무 능력을 키워보세요.</p>
-
-<h3>🔍 관련 정보</h3>
-"""
-            
-            # 검색 결과 추가
-            if search_results:
-                content += "<ul>"
-                for result in search_results[:3]:
-                    content += f'<li><strong>{result["title"]}</strong><br><small>{result["snippet"]}</small></li>'
-                content += "</ul>"
-            else:
-                content += f"<p>{keyword}에 대한 최신 정보를 확인하려면 구글 검색을 활용해보세요.</p>"
-            
-            content += f"""
-<h3>🌟 마무리</h3>
-<p>{keyword}는 지속적으로 발전하는 기술입니다. 최신 트렌드와 업데이트를 꾸준히 확인하며 학습해보세요.</p>
-            """
-            
-        except Exception as crawl_error:
-            print(f"크롤링 오류: {crawl_error}")
-            # 크롤링 실패 시 기본 정보 제공
-            title = f"{keyword} 학습 가이드"
-            content = f"""
-<h3>🎯 {keyword} 학습하기</h3>
-<p>{keyword}에 대한 정보를 수집하는 중입니다. 잠시 후 다시 시도해주세요.</p>
-
-<h3>📚 기본 학습 방법</h3>
-<ul>
-<li>온라인 튜토리얼 참고</li>
-<li>실습 프로젝트 진행</li>
-<li>커뮤니티 활동</li>
-<li>최신 트렌드 파악</li>
-</ul>
-
-<h3>💡 학습 팁</h3>
-<p>실제 프로젝트에 적용해보면서 학습하는 것이 가장 효과적입니다.</p>
-            """
-        
-        result = {
-            'success': True,
-            'title': title,
-            'content': content,
-            'source': 'Web Crawling & Research (Cached)'
-        }
-        
-        # 캐시에 저장
-        set_cached_keyword_info(keyword, result)
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
 
 @app.route('/api/ranking')
 def get_blog_ranking():

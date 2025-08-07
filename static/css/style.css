@@ -366,50 +366,7 @@ body {
     background: rgba(0, 0, 0, 0.3);
 }
 
-/* 키워드 상세 정보 스타일 */
-.keyword-content h3 {
-    color: #007AFF;
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-}
 
-.keyword-content p {
-    line-height: 1.6;
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-.keyword-content {
-    font-size: 0.95rem;
-}
-
-#keywordDetail .card {
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-#keywordTitle {
-    color: #007AFF;
-    font-weight: 700;
-    margin-bottom: 0;
-}
-
-/* 클릭 가능한 트렌드 아이템 스타일 */
-.trend-item.clickable {
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.trend-item.clickable:hover {
-    background: rgba(0, 122, 255, 0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.2);
-}
-
-.trend-item.clickable:active {
-    transform: translateY(0);
-}
 
 /* Google AdSense 광고 컨테이너 스타일 */
 .ad-container {

@@ -312,6 +312,10 @@ def sitemap():
 def verification():
     return app.send_static_file('verification.html')
 
+@app.route('/adsense-verification.html')
+def adsense_verification():
+    return app.send_static_file('adsense-verification.html')
+
 
 
 @app.route('/api/trends')

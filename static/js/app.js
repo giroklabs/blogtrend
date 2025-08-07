@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 초기 오늘 베스트 트렌드 로드
     loadTrendsByPeriod('today');
+    
+    // 초기 커스텀 키워드 분석 실행 (블로그 키워드)
+    setTimeout(() => {
+        console.log('초기 커스텀 키워드 분석 시작...');
+        analyzeTrends();
+    }, 2000); // 2초 후 실행
 });
 
 // 로딩 스피너 표시/숨김

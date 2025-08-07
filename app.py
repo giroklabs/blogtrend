@@ -289,6 +289,9 @@ class BlogAnalyzer:
 # 분석기 인스턴스 생성
 analyzer = BlogAnalyzer()
 
+# AI 모델 전역 변수 (지연 로딩)
+ai_generator = None
+
 @app.route('/')
 def index():
     """메인 페이지"""
@@ -437,43 +440,70 @@ def generate_blog_content():
                 'error': '키워드를 입력해주세요.'
             }), 400
         
-        # Hugging Face 모델을 사용한 AI 텍스트 생성
+        # 향상된 템플릿 기반 AI 텍스트 생성
         try:
-            from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
-            import torch
+            import random
             
-            # 모델 로딩 (가벼운 한국어 모델 사용)
-            model_name = "skt/ko-gpt-trinity-1.2B-v0.5"  # 한국어 GPT 모델
+            # 키워드별 제목 템플릿 (더 다양하고 자연스러운 제목들)
+            title_templates = [
+                f"{keyword} 완전 가이드: 초보자도 쉽게 배우는 방법",
+                f"{keyword} 마스터하기: 실전 활용 팁 10가지",
+                f"2025년 {keyword} 트렌드와 핵심 기술",
+                f"{keyword} 입문자를 위한 기초부터 심화까지",
+                f"{keyword} 실무 활용: 실제 프로젝트로 배우기",
+                f"{keyword} 기초 강의: 처음부터 차근차근",
+                f"{keyword} 핵심 정리: 꼭 알아야 할 포인트",
+                f"{keyword} 실습 가이드: 직접 만들어보기",
+                f"{keyword} 최신 동향: 2025년 업데이트",
+                f"{keyword} 전문가 팁: 실무에서 활용하기"
+            ]
             
-            # 텍스트 생성 파이프라인 생성
-            generator = pipeline(
-                'text-generation',
-                model=model_name,
-                tokenizer=model_name,
-                max_length=150,
-                do_sample=True,
-                temperature=0.7,
-                top_p=0.9,
-                repetition_penalty=1.2
-            )
+            # 키워드별 내용 템플릿 (더 자연스럽고 상세한 내용들)
+            content_templates = [
+                f"""
+<h3>🎯 {keyword}란 무엇인가?</h3>
+<p>{keyword}는 현대 개발에서 필수적인 기술입니다. 이 글에서는 {keyword}의 기본 개념부터 실무 활용까지 단계별로 알아보겠습니다.</p>
+
+<h3>📚 기본 개념 이해하기</h3>
+<p>{keyword}를 처음 접하는 분들을 위해 핵심 개념을 쉽게 설명드리겠습니다. 복잡한 이론보다는 실제 사용 사례를 중심으로 설명하겠습니다.</p>
+
+<h3>💡 실무 활용 팁</h3>
+<p>이론만으로는 부족합니다. 실제 프로젝트에서 {keyword}를 어떻게 활용하는지 구체적인 예시와 함께 알아보겠습니다.</p>
+
+<h3>🚀 다음 단계</h3>
+<p>{keyword}에 대한 기본기를 다졌다면, 이제 더 심화된 내용을 학습해보세요. 지속적인 학습과 실습이 성공의 열쇠입니다.</p>
+                """,
+                f"""
+<h3>🔥 {keyword} 핵심 포인트</h3>
+<p>오늘은 {keyword}에 대해 자세히 알아보겠습니다. 이 기술의 중요성과 활용 방법을 중심으로 설명드리겠습니다.</p>
+
+<h3>📖 기초부터 차근차근</h3>
+<p>{keyword}의 기본 원리를 이해하면 더 높은 수준의 기술도 쉽게 습득할 수 있습니다. 체계적인 학습 방법을 제시해드리겠습니다.</p>
+
+<h3>🎨 실전 예제</h3>
+<p>이론과 실습을 병행하는 것이 가장 효과적입니다. {keyword}를 활용한 실제 예제를 통해 실무 능력을 키워보세요.</p>
+
+<h3>💪 마무리</h3>
+<p>{keyword} 학습은 끝이 없습니다. 꾸준한 연습과 새로운 정보 습득을 통해 전문가로 성장하세요.</p>
+                """,
+                f"""
+<h3>🚀 {keyword} 시작하기</h3>
+<p>{keyword}를 배우고 싶지만 어디서부터 시작해야 할지 막막하신가요? 이 글에서는 {keyword} 학습 로드맵을 제시해드리겠습니다.</p>
+
+<h3>📋 학습 계획 세우기</h3>
+<p>효과적인 학습을 위해서는 체계적인 계획이 필요합니다. {keyword} 학습을 위한 단계별 계획을 수립해보겠습니다.</p>
+
+<h3>🎯 실습 중심 학습</h3>
+<p>이론만으로는 부족합니다. {keyword}를 실제로 사용해보면서 익히는 것이 가장 효과적입니다.</p>
+
+<h3>🌟 성장을 위한 팁</h3>
+<p>{keyword} 마스터가 되기 위한 실용적인 조언들을 모아보았습니다. 꾸준한 연습과 실무 적용이 핵심입니다.</p>
+                """
+            ]
             
-            # 한국어 프롬프트 생성
-            title_prompt = f"{keyword}에 대한 블로그 제목: "
-            
-            # 제목 생성
-            title_response = generator(title_prompt, max_length=30, num_return_sequences=1)
-            title = title_response[0]['generated_text'].replace(title_prompt, "").strip()
-            
-            # 내용 생성 프롬프트
-            content_prompt = f"{keyword}에 대한 블로그 글 내용: "
-            content_response = generator(content_prompt, max_length=200, num_return_sequences=1)
-            content = content_response[0]['generated_text'].replace(content_prompt, "").strip()
-            
-            # HTML 형식으로 변환
-            content = f"""
-<h3>🎯 {keyword}에 대한 블로그 포스트</h3>
-<p>{content}</p>
-            """
+            # 랜덤하게 제목과 내용 선택
+            title = random.choice(title_templates)
+            content = random.choice(content_templates)
             
         except Exception as ai_error:
             print(f"AI 모델 오류: {ai_error}")
@@ -524,7 +554,7 @@ def generate_blog_content():
             'success': True,
             'title': title,
             'content': content,
-            'ai_model': 'Hugging Face Korean GPT'
+            'ai_model': 'Enhanced Template System'
         })
         
     except Exception as e:

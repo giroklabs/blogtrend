@@ -7,6 +7,8 @@ from pytrends.request import TrendReq
 import pandas as pd
 from dotenv import load_dotenv
 import time
+from functools import lru_cache
+import hashlib
 
 load_dotenv()
 
@@ -289,8 +291,9 @@ class BlogAnalyzer:
 # 분석기 인스턴스 생성
 analyzer = BlogAnalyzer()
 
-# AI 모델 전역 변수 (지연 로딩)
-ai_generator = None
+# 캐시 설정
+CACHE_TIMEOUT = 300  # 5분 캐시
+keyword_cache = {}
 
 @app.route('/')
 def index():
@@ -427,9 +430,26 @@ def analyze_custom_blogs():
             'error': str(e)
         }), 500
 
+def get_cached_keyword_info(keyword):
+    """키워드 정보 캐싱"""
+    cache_key = hashlib.md5(keyword.encode()).hexdigest()
+    current_time = time.time()
+    
+    if cache_key in keyword_cache:
+        cached_data, timestamp = keyword_cache[cache_key]
+        if current_time - timestamp < CACHE_TIMEOUT:
+            return cached_data
+    
+    return None
+
+def set_cached_keyword_info(keyword, data):
+    """키워드 정보 캐시 저장"""
+    cache_key = hashlib.md5(keyword.encode()).hexdigest()
+    keyword_cache[cache_key] = (data, time.time())
+
 @app.route('/api/generate-blog', methods=['POST'])
 def generate_blog_content():
-    """웹 크롤링 기반 블로그 정보 수집기"""
+    """웹 크롤링 기반 블로그 정보 수집기 (캐싱 적용)"""
     try:
         data = request.get_json()
         keyword = data.get('keyword', '')
@@ -439,6 +459,11 @@ def generate_blog_content():
                 'success': False,
                 'error': '키워드를 입력해주세요.'
             }), 400
+        
+        # 캐시 확인
+        cached_result = get_cached_keyword_info(keyword)
+        if cached_result:
+            return jsonify(cached_result)
         
         # 웹 크롤링을 통한 정보 수집
         try:
@@ -567,12 +592,17 @@ def generate_blog_content():
 <p>실제 프로젝트에 적용해보면서 학습하는 것이 가장 효과적입니다.</p>
             """
         
-        return jsonify({
+        result = {
             'success': True,
             'title': title,
             'content': content,
-            'source': 'Web Crawling & Research'
-        })
+            'source': 'Web Crawling & Research (Cached)'
+        }
+        
+        # 캐시에 저장
+        set_cached_keyword_info(keyword, result)
+        
+        return jsonify(result)
         
     except Exception as e:
         return jsonify({
@@ -661,4 +691,4 @@ def get_blog_ranking():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    app.run(debug=True, host='0.0.0.0', port=port) 
+    app.run(debug=False, host='0.0.0.0', port=port, threaded=True) 

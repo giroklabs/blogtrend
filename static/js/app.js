@@ -540,10 +540,17 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// 키워드 상세 정보 표시
+// 키워드 상세 정보 표시 (최적화)
 async function showKeywordDetail(keyword) {
     try {
         showLoading();
+        
+        // 이미 로딩 중인지 확인
+        if (window.loadingKeyword === keyword) {
+            return;
+        }
+        window.loadingKeyword = keyword;
+        
         const response = await fetch('/api/generate-blog', {
             method: 'POST',
             headers: {
@@ -571,6 +578,7 @@ async function showKeywordDetail(keyword) {
         showAlert('키워드 정보 수집에 실패했습니다.', 'danger');
     } finally {
         hideLoading();
+        window.loadingKeyword = null;
     }
 }
 

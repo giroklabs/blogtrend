@@ -429,7 +429,7 @@ def analyze_custom_blogs():
 
 @app.route('/api/generate-blog', methods=['POST'])
 def generate_blog_content():
-    """AI 블로그 글쓰기 도우미 (Hugging Face 모델 사용)"""
+    """웹 크롤링 기반 블로그 정보 수집기"""
     try:
         data = request.get_json()
         keyword = data.get('keyword', '')
@@ -440,121 +440,138 @@ def generate_blog_content():
                 'error': '키워드를 입력해주세요.'
             }), 400
         
-        # 향상된 템플릿 기반 AI 텍스트 생성
+        # 웹 크롤링을 통한 정보 수집
         try:
-            import random
+            import requests
+            from bs4 import BeautifulSoup
+            import re
             
-            # 키워드별 제목 템플릿 (더 다양하고 자연스러운 제목들)
-            title_templates = [
-                f"{keyword} 완전 가이드: 초보자도 쉽게 배우는 방법",
-                f"{keyword} 마스터하기: 실전 활용 팁 10가지",
-                f"2025년 {keyword} 트렌드와 핵심 기술",
-                f"{keyword} 입문자를 위한 기초부터 심화까지",
-                f"{keyword} 실무 활용: 실제 프로젝트로 배우기",
-                f"{keyword} 기초 강의: 처음부터 차근차근",
-                f"{keyword} 핵심 정리: 꼭 알아야 할 포인트",
-                f"{keyword} 실습 가이드: 직접 만들어보기",
-                f"{keyword} 최신 동향: 2025년 업데이트",
-                f"{keyword} 전문가 팁: 실무에서 활용하기"
-            ]
+            # 검색 결과 수집
+            search_results = []
             
-            # 키워드별 내용 템플릿 (더 자연스럽고 상세한 내용들)
-            content_templates = [
-                f"""
+            # Google 검색 결과 크롤링 (실제로는 검색 API 사용 권장)
+            search_url = f"https://www.google.com/search?q={keyword}+블로그+가이드"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            try:
+                response = requests.get(search_url, headers=headers, timeout=10)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                # 검색 결과 추출
+                search_divs = soup.find_all('div', class_='g')
+                for div in search_divs[:5]:  # 상위 5개 결과
+                    title_elem = div.find('h3')
+                    snippet_elem = div.find('div', class_='VwiC3b')
+                    
+                    if title_elem and snippet_elem:
+                        search_results.append({
+                            'title': title_elem.get_text(),
+                            'snippet': snippet_elem.get_text()[:200] + '...'
+                        })
+            except Exception as e:
+                print(f"검색 크롤링 오류: {e}")
+            
+            # 키워드별 기본 정보 생성
+            keyword_info = {
+                '파이썬': {
+                    'description': 'Python은 간단하고 강력한 프로그래밍 언어입니다. 웹 개발, 데이터 분석, AI, 자동화 등 다양한 분야에서 사용됩니다.',
+                    'features': ['간단한 문법', '풍부한 라이브러리', '크로스 플랫폼', '오픈소스'],
+                    'learning_path': ['기본 문법', '함수와 클래스', '파일 처리', '웹 프레임워크', '데이터 분석']
+                },
+                '리액트': {
+                    'description': 'React는 Facebook에서 개발한 JavaScript 라이브러리로, 사용자 인터페이스를 구축하기 위한 선언적이고 효율적인 방법을 제공합니다.',
+                    'features': ['컴포넌트 기반', '가상 DOM', '단방향 데이터 흐름', 'JSX'],
+                    'learning_path': ['JavaScript 기초', 'JSX 문법', '컴포넌트', 'State 관리', 'Hooks']
+                },
+                '자바스크립트': {
+                    'description': 'JavaScript는 웹 브라우저에서 실행되는 프로그래밍 언어로, 동적인 웹 페이지를 만들 수 있게 해줍니다.',
+                    'features': ['프로토타입 기반', '동적 타입', '이벤트 기반', '비동기 처리'],
+                    'learning_path': ['기본 문법', 'DOM 조작', '이벤트 처리', 'AJAX', 'ES6+']
+                },
+                '웹개발': {
+                    'description': '웹 개발은 웹사이트나 웹 애플리케이션을 구축하는 과정으로, 프론트엔드와 백엔드 개발을 포함합니다.',
+                    'features': ['HTML/CSS/JavaScript', '반응형 디자인', '웹 표준', '성능 최적화'],
+                    'learning_path': ['HTML 기초', 'CSS 스타일링', 'JavaScript', '프레임워크', '백엔드']
+                },
+                'AI': {
+                    'description': '인공지능(AI)은 인간의 학습능력과 추론능력, 지각능력, 자연언어의 이해능력 등을 컴퓨터 프로그램으로 실현한 기술입니다.',
+                    'features': ['머신러닝', '딥러닝', '자연어처리', '컴퓨터 비전'],
+                    'learning_path': ['수학 기초', 'Python', '머신러닝', '딥러닝', '실전 프로젝트']
+                }
+            }
+            
+            # 키워드 정보 가져오기
+            info = keyword_info.get(keyword.lower(), {
+                'description': f'{keyword}에 대한 정보를 수집했습니다.',
+                'features': ['기본 개념', '핵심 기능', '활용 분야', '학습 방법'],
+                'learning_path': ['기초 학습', '실습', '심화 과정', '실무 적용']
+            })
+            
+            # 제목 생성
+            title = f"{keyword} 완전 가이드: 실무에서 활용하는 방법"
+            
+            # 내용 생성
+            content = f"""
 <h3>🎯 {keyword}란 무엇인가?</h3>
-<p>{keyword}는 현대 개발에서 필수적인 기술입니다. 이 글에서는 {keyword}의 기본 개념부터 실무 활용까지 단계별로 알아보겠습니다.</p>
+<p>{info['description']}</p>
 
-<h3>📚 기본 개념 이해하기</h3>
-<p>{keyword}를 처음 접하는 분들을 위해 핵심 개념을 쉽게 설명드리겠습니다. 복잡한 이론보다는 실제 사용 사례를 중심으로 설명하겠습니다.</p>
+<h3>📚 주요 특징</h3>
+<ul>
+{''.join([f'<li>{feature}</li>' for feature in info['features']])}
+</ul>
+
+<h3>🚀 학습 로드맵</h3>
+<ol>
+{''.join([f'<li>{step}</li>' for step in info['learning_path']])}
+</ol>
 
 <h3>💡 실무 활용 팁</h3>
-<p>이론만으로는 부족합니다. 실제 프로젝트에서 {keyword}를 어떻게 활용하는지 구체적인 예시와 함께 알아보겠습니다.</p>
+<p>{keyword}를 효과적으로 학습하려면 실제 프로젝트에 적용해보는 것이 중요합니다. 온라인 튜토리얼과 실습을 병행하여 실무 능력을 키워보세요.</p>
 
-<h3>🚀 다음 단계</h3>
-<p>{keyword}에 대한 기본기를 다졌다면, 이제 더 심화된 내용을 학습해보세요. 지속적인 학습과 실습이 성공의 열쇠입니다.</p>
-                """,
-                f"""
-<h3>🔥 {keyword} 핵심 포인트</h3>
-<p>오늘은 {keyword}에 대해 자세히 알아보겠습니다. 이 기술의 중요성과 활용 방법을 중심으로 설명드리겠습니다.</p>
-
-<h3>📖 기초부터 차근차근</h3>
-<p>{keyword}의 기본 원리를 이해하면 더 높은 수준의 기술도 쉽게 습득할 수 있습니다. 체계적인 학습 방법을 제시해드리겠습니다.</p>
-
-<h3>🎨 실전 예제</h3>
-<p>이론과 실습을 병행하는 것이 가장 효과적입니다. {keyword}를 활용한 실제 예제를 통해 실무 능력을 키워보세요.</p>
-
-<h3>💪 마무리</h3>
-<p>{keyword} 학습은 끝이 없습니다. 꾸준한 연습과 새로운 정보 습득을 통해 전문가로 성장하세요.</p>
-                """,
-                f"""
-<h3>🚀 {keyword} 시작하기</h3>
-<p>{keyword}를 배우고 싶지만 어디서부터 시작해야 할지 막막하신가요? 이 글에서는 {keyword} 학습 로드맵을 제시해드리겠습니다.</p>
-
-<h3>📋 학습 계획 세우기</h3>
-<p>효과적인 학습을 위해서는 체계적인 계획이 필요합니다. {keyword} 학습을 위한 단계별 계획을 수립해보겠습니다.</p>
-
-<h3>🎯 실습 중심 학습</h3>
-<p>이론만으로는 부족합니다. {keyword}를 실제로 사용해보면서 익히는 것이 가장 효과적입니다.</p>
-
-<h3>🌟 성장을 위한 팁</h3>
-<p>{keyword} 마스터가 되기 위한 실용적인 조언들을 모아보았습니다. 꾸준한 연습과 실무 적용이 핵심입니다.</p>
-                """
-            ]
+<h3>🔍 관련 정보</h3>
+"""
             
-            # 랜덤하게 제목과 내용 선택
-            title = random.choice(title_templates)
-            content = random.choice(content_templates)
+            # 검색 결과 추가
+            if search_results:
+                content += "<ul>"
+                for result in search_results[:3]:
+                    content += f'<li><strong>{result["title"]}</strong><br><small>{result["snippet"]}</small></li>'
+                content += "</ul>"
+            else:
+                content += f"<p>{keyword}에 대한 최신 정보를 확인하려면 구글 검색을 활용해보세요.</p>"
             
-        except Exception as ai_error:
-            print(f"AI 모델 오류: {ai_error}")
-            # AI 모델 실패 시 기존 템플릿 시스템 사용
-            import random
+            content += f"""
+<h3>🌟 마무리</h3>
+<p>{keyword}는 지속적으로 발전하는 기술입니다. 최신 트렌드와 업데이트를 꾸준히 확인하며 학습해보세요.</p>
+            """
             
-            title_templates = [
-                f"{keyword} 완전 가이드: 초보자도 쉽게 배우는 방법",
-                f"{keyword} 마스터하기: 실전 활용 팁 10가지",
-                f"2025년 {keyword} 트렌드와 핵심 기술",
-                f"{keyword} 입문자를 위한 기초부터 심화까지",
-                f"{keyword} 실무 활용: 실제 프로젝트로 배우기"
-            ]
-            
-            content_templates = [
-                f"""
-<h3>🎯 {keyword}란 무엇인가?</h3>
-<p>{keyword}는 현대 개발에서 필수적인 기술입니다. 이 글에서는 {keyword}의 기본 개념부터 실무 활용까지 단계별로 알아보겠습니다.</p>
+        except Exception as crawl_error:
+            print(f"크롤링 오류: {crawl_error}")
+            # 크롤링 실패 시 기본 정보 제공
+            title = f"{keyword} 학습 가이드"
+            content = f"""
+<h3>🎯 {keyword} 학습하기</h3>
+<p>{keyword}에 대한 정보를 수집하는 중입니다. 잠시 후 다시 시도해주세요.</p>
 
-<h3>📚 기본 개념 이해하기</h3>
-<p>{keyword}를 처음 접하는 분들을 위해 핵심 개념을 쉽게 설명드리겠습니다. 복잡한 이론보다는 실제 사용 사례를 중심으로 설명하겠습니다.</p>
+<h3>📚 기본 학습 방법</h3>
+<ul>
+<li>온라인 튜토리얼 참고</li>
+<li>실습 프로젝트 진행</li>
+<li>커뮤니티 활동</li>
+<li>최신 트렌드 파악</li>
+</ul>
 
-<h3>💡 실무 활용 팁</h3>
-<p>이론만으로는 부족합니다. 실제 프로젝트에서 {keyword}를 어떻게 활용하는지 구체적인 예시와 함께 알아보겠습니다.</p>
-
-<h3>🚀 다음 단계</h3>
-<p>{keyword}에 대한 기본기를 다졌다면, 이제 더 심화된 내용을 학습해보세요. 지속적인 학습과 실습이 성공의 열쇠입니다.</p>
-                """,
-                f"""
-<h3>🔥 {keyword} 핵심 포인트</h3>
-<p>오늘은 {keyword}에 대해 자세히 알아보겠습니다. 이 기술의 중요성과 활용 방법을 중심으로 설명드리겠습니다.</p>
-
-<h3>📖 기초부터 차근차근</h3>
-<p>{keyword}의 기본 원리를 이해하면 더 높은 수준의 기술도 쉽게 습득할 수 있습니다. 체계적인 학습 방법을 제시해드리겠습니다.</p>
-
-<h3>🎨 실전 예제</h3>
-<p>이론과 실습을 병행하는 것이 가장 효과적입니다. {keyword}를 활용한 실제 예제를 통해 실무 능력을 키워보세요.</p>
-
-<h3>💪 마무리</h3>
-<p>{keyword} 학습은 끝이 없습니다. 꾸준한 연습과 새로운 정보 습득을 통해 전문가로 성장하세요.</p>
-                """
-            ]
-            
-            title = random.choice(title_templates)
-            content = random.choice(content_templates)
+<h3>💡 학습 팁</h3>
+<p>실제 프로젝트에 적용해보면서 학습하는 것이 가장 효과적입니다.</p>
+            """
         
         return jsonify({
             'success': True,
             'title': title,
             'content': content,
-            'ai_model': 'Enhanced Template System'
+            'source': 'Web Crawling & Research'
         })
         
     except Exception as e:
